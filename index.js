@@ -30,6 +30,7 @@ async function run() {
 
 
         const servicesCollection = client.db("SnapFix").collection("services");
+        const purchaseCollection = client.db("SnapFix").collection("bookings");
 
         // services api
         app.get('/services', async (req, res) => {
@@ -57,6 +58,26 @@ async function run() {
             res.send(result);
         });
 
+        // purchase api
+
+        app.get('/bookings', async (req, res) => {
+            const cursor = purchaseCollection.find();
+            const result = await cursor.toArray();
+            res.send(result);
+        });
+
+        app.post('/bookings', async (req, res) => {
+            const bookings = req.body;
+            const result = await purchaseCollection.insertOne(bookings);
+            res.send(result);
+        });
+
+        app.delete('/bookings/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await purchaseCollection.deleteOne(query);
+            res.send(result);
+        });
 
 
 
