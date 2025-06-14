@@ -52,17 +52,34 @@ async function run() {
             res.send(result);
         });
 
+        app.get('/services-provider', async (req, res) => {
+            const email = req.query.email;
+            const query = { providerEmail: email };
+            const services = await servicesCollection.find(query).toArray();
+            res.send(services);
+        });
+
         app.post('/services', async (req, res) => {
             const services = req.body;
             const result = await servicesCollection.insertOne(services);
             res.send(result);
         });
 
+        app.delete('/all-services/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await servicesCollection.deleteOne(query);
+            res.send(result);
+        });
+
         // purchase api
 
         app.get('/bookings', async (req, res) => {
-            const cursor = purchaseCollection.find();
-            const result = await cursor.toArray();
+            const email = req.query.email;
+            const query = {
+                userEmail: email
+            }
+            const result = await purchaseCollection.find(query).toArray();
             res.send(result);
         });
 
