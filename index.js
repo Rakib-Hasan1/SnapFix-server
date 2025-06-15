@@ -93,6 +93,23 @@ async function run() {
             res.send(result);
         });
 
+        // for service to do
+        app.get("/bookings/provider", async (req, res) => {
+            const email = req.query.email;
+            const result = await purchaseCollection.find({ providerEmail: email }).toArray();
+            res.send(result);
+        });
+
+        app.put("/bookings/status/:id", async (req, res) => {
+            const id = req.params.id;
+            const { serviceStatus } = req.body;
+            const filter = { _id: new ObjectId(id) };
+            const updateDoc = { $set: { serviceStatus } };
+
+            const result = await purchaseCollection.updateOne(filter, updateDoc);
+            res.send(result);
+        });
+
         // purchase api
 
         app.get('/bookings', async (req, res) => {
