@@ -54,7 +54,10 @@ async function run() {
 
         app.get('/services-provider', async (req, res) => {
             const email = req.query.email;
-            const query = { providerEmail: email };
+            const query = {};
+            if (email) {
+                query.providerEmail = email;
+            }
             const services = await servicesCollection.find(query).toArray();
             res.send(services);
         });
@@ -62,6 +65,24 @@ async function run() {
         app.post('/services', async (req, res) => {
             const services = req.body;
             const result = await servicesCollection.insertOne(services);
+            res.send(result);
+        });
+
+        app.get('/services/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await servicesCollection.findOne(query);
+            res.send(result);
+        });
+
+        app.put('/services/:id', async (req, res) => {
+            const id = req.params.id;
+            const updatedData = req.body;
+            const filter = { _id: new ObjectId(id) };
+            const updatedDoc = {
+                $set: updatedData
+            };
+            const result = await servicesCollection.updateOne(filter, updatedDoc);
             res.send(result);
         });
 
