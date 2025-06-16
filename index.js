@@ -76,10 +76,13 @@ async function run() {
             res.send(result);
         });
 
-        app.get('/all-services/:id', async (req, res) => {
+        app.get('/all-services/:id', verifyFirebaseToken, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await servicesCollection.findOne(query);
+            if (result.providerEmail !== req.decoded.email) {
+                return res.status(403).send({ message: 'Forbidden access' });
+            };
             res.send(result);
         });
 
