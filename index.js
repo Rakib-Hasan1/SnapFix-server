@@ -1,6 +1,10 @@
 const express = require('express');
 const cors = require('cors');
 const app = express();
+
+const admin = require("firebase-admin");
+const serviceAccount = require("./SnapFix-firebase-admin-service-key.json");
+
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 3000;
 require('dotenv').config();
@@ -22,6 +26,33 @@ const client = new MongoClient(uri, {
         deprecationErrors: true,
     }
 });
+
+
+
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+});
+
+
+const verifyFirebaseToken = async (req, res, next) => {
+    const authHeader = req.headers?.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).send({ message: 'unauthorized access' });
+    }
+
+    const token = authHeader.split(' ')[1];
+
+    try {
+        const decoded = await admin.auth().verifyIdToken(token);
+        console.log('decoded token', decoded);
+        req.decoded = decoded;
+        next();
+    }
+    catch (error) {
+        return res.status(401).send({ message: 'unauthorized token' })
+    }
+
+};
 
 async function run() {
     try {
@@ -52,8 +83,15 @@ async function run() {
             res.send(result);
         });
 
-        app.get('/services-provider', async (req, res) => {
+        app.get('/services-provider', verifyFirebaseToken, async (req, res) => {
             const email = req.query.email;
+
+
+            if (email !== req.decoded.email) {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+
+
             const query = {};
             if (email) {
                 query.providerEmail = email;
@@ -68,10 +106,15 @@ async function run() {
             res.send(result);
         });
 
-        app.get('/services/:id', async (req, res) => {
+        app.get('/services/:id', verifyFirebaseToken, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await servicesCollection.findOne(query);
+
+            if (result.providerEmail !== req.decoded.email) {
+                return res.status(403).send({ message: 'Forbidden access' });
+            };
+
             res.send(result);
         });
 
@@ -94,8 +137,11 @@ async function run() {
         });
 
         // for service to do
-        app.get("/bookings/provider", async (req, res) => {
+        app.get("/bookings/provider", verifyFirebaseToken, async (req, res) => {
             const email = req.query.email;
+            if (email !== req.decoded.email) {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
             const result = await purchaseCollection.find({ providerEmail: email }).toArray();
             res.send(result);
         });
@@ -112,8 +158,13 @@ async function run() {
 
         // purchase api
 
-        app.get('/bookings', async (req, res) => {
+        app.get('/bookings', verifyFirebaseToken, async (req, res) => {
             const email = req.query.email;
+
+            if (email !== req.decoded.email) {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+
             const query = {
                 userEmail: email
             }
