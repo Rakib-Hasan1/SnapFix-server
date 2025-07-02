@@ -4,8 +4,7 @@ const app = express();
 
 const admin = require("firebase-admin");
 
-const decoded = Buffer.from(process.env.FB_SERVICE_KEY, 'base64').toString('utf8')
-const serviceAccount = JSON.parse(decoded);
+const serviceAccount = require("./SnapFix-firebase-admin-service-key.json");
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 3000;
@@ -67,7 +66,7 @@ async function run() {
 
         // services api
         app.get('/services', async (req, res) => {
-            const cursor = servicesCollection.find().limit(6);
+            const cursor = servicesCollection.find().limit(8);
             const result = await cursor.toArray();
             res.send(result);
         });
@@ -82,9 +81,9 @@ async function run() {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await servicesCollection.findOne(query);
-            if (result.providerEmail !== req.decoded.email) {
-                return res.status(403).send({ message: 'Forbidden access' });
-            };
+            if (!result) {
+                return res.status(403).send({ message: 'forbidden access' });
+            }
             res.send(result);
         });
 
@@ -196,7 +195,7 @@ async function run() {
 
         // Send a ping to confirm a successful connection
         // await client.db("admin").command({ ping: 1 });
-        // console.log("Pinged your deployment. You successfully connected to MongoDB!");
+        console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
         // await client.close();
