@@ -58,7 +58,7 @@ const verifyFirebaseToken = async (req, res, next) => {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+        // await client.connect();
 
 
         const servicesCollection = client.db("SnapFix").collection("services");
@@ -208,6 +208,4 @@ app.get('/', (req, res) => {
     res.send("Welcome to SnapFix Service Web Application")
 });
 
-app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`)
-});
+module.exports = app;
