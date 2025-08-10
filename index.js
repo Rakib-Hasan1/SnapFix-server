@@ -63,6 +63,20 @@ async function run() {
 
         const servicesCollection = client.db("SnapFix").collection("services");
         const purchaseCollection = client.db("SnapFix").collection("bookings");
+        const reviewsCollection = client.db("SnapFix").collection("reviews");
+
+        app.get('/reviews', async (req, res) => {
+            try {
+                const reviews = await reviewsCollection
+                    .find()
+                    .sort({ date: -1 }) // Newest first
+                    .toArray();
+                res.json(reviews);
+            } catch (error) {
+                console.error(error);
+                res.status(500).json({ message: 'Failed to fetch reviews' });
+            }
+        });
 
         // services api
         app.get('/services', async (req, res) => {
